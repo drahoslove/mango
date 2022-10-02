@@ -39,6 +39,7 @@ A visualiser of **Man**delbrot set written in **Go**
 ### navigation
 
 - `pgDn` / `pgUp` or `wheel ↕` - zoom in / zoom out
+- `left click` - center to point
 - `←` `→` `↑` `↓` - move left/right/up/down
 - `R` - reset zoom and position
 
