@@ -2,6 +2,9 @@
 
 A visualiser of **Man**delbrot set written in **Go**
 
+ - real-time navigation
+ - multithreading support
+ - image saving / loading
 
 
 <img src="images/set_1664718211_(-0.5+0i)_1_0_.png" width="256"
@@ -13,7 +16,7 @@ A visualiser of **Man**delbrot set written in **Go**
 />
 
 
-## Installation & usage
+## Installation
 
 [Download binary for Windows](https://github.com/drahoslove/mango/releases/latest/download/mango.exe)
 
@@ -23,8 +26,13 @@ A visualiser of **Man**delbrot set written in **Go**
 
 ```cd `go env GOPATH`/bin```
 
-`./mango[.exe] [image.png]`
+## Examples of usage
 
+`./mango` - default view
+
+`./mango image.png` - to load saved image (you can also drag'n'drop image file to the executable file) - the state si saved in the file name
+
+`WORKERS=16 ./mango`- to change number of rendering gorutines (threads)
 
 ## Kye binding
 
@@ -37,10 +45,10 @@ A visualiser of **Man**delbrot set written in **Go**
 
 ### visual
 - `1` `2` `3` `4` - switch between coloring modes
-- `H` - set number of steps to High (32k)
-- `J` - double the number of steps
-- `K` - halve the number of steps
-- `L` - set number of steps to Low (1k)
+- `H` - set number of iterations to High (32k)
+- `J` - double the number of iterations
+- `K` - halve the number of iterations
+- `L` - set number of iterations to Low (1k)
 
 ### images
 - `ctrl`+`S` - save current image

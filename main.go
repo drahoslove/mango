@@ -250,7 +250,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		fmt.Sprintf(
 			// "Arrows to navigate\n"+
 			// "PgUp/PgDn to zoom\n"+
-			"c: %v\nzoom: %v\nsteps: %v",
+			"c: %v\nzoom: %v\niters: %v",
 			mid, toHumNum(g.set.zoom), toHumNum(float64(g.set.steps))),
 	)
 }
