@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -31,19 +32,18 @@ const (
 
 var MAX_ITERS = 1 << 10 // max iterations before determining whther the point is in set or not
 
-var WORKERS_COUNT = 1
+var WORKERS = 1
 
 func init() {
-	WORKERS_COUNT = runtime.NumCPU()/2 - 1
-	if WORKERS_COUNT < 1 {
-		WORKERS_COUNT = 2
+	WORKERS = runtime.NumCPU()/2 - 1
+	if WORKERS < 1 {
+		WORKERS = 2
 	}
-}
 
-func init() {
-	WORKERS_COUNT = runtime.NumCPU()/2 - 1
-	if WORKERS_COUNT < 1 {
-		WORKERS_COUNT = 2
+	if w := os.Getenv("WORKERS"); w != "" {
+		if ww, err := strconv.ParseUint(w, 10, 32); err == nil {
+			WORKERS = int(ww)
+		}
 	}
 }
 

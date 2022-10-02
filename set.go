@@ -189,8 +189,8 @@ func (g *SetComputor) Init() {
 			if workload != nil {
 				close(workload)
 			}
-			workload = make(chan Work)           // spawn new workers for each cw
-			for i := 0; i < WORKERS_COUNT; i++ { // spawn workers
+			workload = make(chan Work)     // spawn new workers for each cw
+			for i := 0; i < WORKERS; i++ { // spawn workers
 				go worker(workload)
 			}
 		currentWorkLoop:
