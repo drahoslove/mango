@@ -43,7 +43,7 @@ func zigZagIndexes(n int) []int {
 // return n multiplied by sqrt2 if sign is +1
 // or n divided by sqrt2 if sign is -1
 // powers of 2 are rounded exactly
-func nextSqrt(n float64, sign int) float64 { // +1 or -2
+func nextSqrt(n float64, sign int) float64 {
 	lvl := int(math.Round(math.Log2(n) * 2))
 	lvl += sign
 
