@@ -15,6 +15,10 @@ A visualiser of **Man**delbrot set written in **Go**
 
 ## Installation & usage
 
+[Download binary for Windows](https://github.com/drahoslove/mango/releases/latest/download/mango.exe)
+
+ &mdash; or &mdash;
+
 `go install github.com/drahoslove/mango@latest`
 
 ```cd `go env GOPATH`/bin```
