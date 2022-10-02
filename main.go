@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/png"
 	"log"
-	"math"
 	"os"
 	"runtime"
 
@@ -176,16 +175,16 @@ func (g *Game) Update() error {
 		go g.Compute()
 	}
 
-	if g.set.steps < MAX_ITERS {
-		if g.ticks%6 == 0 {
-			go g.Compute()
-			g.set.steps += 1 + int(math.Pow((math.Log(float64(g.set.steps))), 3)/10)
-			if g.set.steps > MAX_ITERS {
-				g.set.steps -= g.set.steps % MAX_ITERS
-			}
-		}
-		g.ticks++
-	}
+	// if g.set.steps < MAX_ITERS {
+	// 	if g.ticks%6 == 0 {
+	// 		go g.Compute()
+	// 		g.set.steps += 1 + int(math.Pow((math.Log(float64(g.set.steps))), 3)/10)
+	// 		if g.set.steps > MAX_ITERS {
+	// 			g.set.steps -= g.set.steps % MAX_ITERS
+	// 		}
+	// 	}
+	// 	g.ticks++
+	// }
 
 	return nil
 }

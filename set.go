@@ -184,11 +184,15 @@ func (g *SetComputor) Init() {
 		}
 	}
 	manager := func(computeWorks chan ComputeWork) {
-		workload := make(chan Work)
-		for i := 0; i < WORKERS_COUNT; i++ { // spawn workers
-			go worker(workload)
-		}
-		for cw := range computeWorks { // cw represent current Compute call
+		var workload chan Work
+		for cw := range computeWorks { // cw represent current Compute
+			if workload != nil {
+				close(workload)
+			}
+			workload = make(chan Work)           // spawn new workers for each cw
+			for i := 0; i < WORKERS_COUNT; i++ { // spawn workers
+				go worker(workload)
+			}
 		currentWorkLoop:
 			for {
 				select {
@@ -216,7 +220,7 @@ func (g *SetComputor) Compute() {
 		g.Init()
 	}
 
-	if g.cancelUpdate != nil {
+	if g.cancelUpdate != nil { // cancel existing Compute run
 		(*g.cancelUpdate)()
 	}
 
@@ -231,7 +235,7 @@ func (g *SetComputor) Compute() {
 	// poush current workload to workloads
 	workload := make(chan Work)
 
-	g.workloads <- ComputeWork{
+	g.workloads <- ComputeWork{ // cw set to the manager
 		workload,
 		ctx,
 	}
