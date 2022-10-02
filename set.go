@@ -76,6 +76,36 @@ func (s *Set) PixToSet(x, y int) complex128 {
 	)
 }
 
+func (s *Set) SetToPix(c complex128) (x, y int) {
+	zoom := s.zoom / 2.5
+	span := s.h
+	x = int(
+		(real(c)-real(s.mid))*zoom*float64(span) + float64(span/2) + float64(s.w-s.h)/2,
+	)
+	y = int(
+		(imag(c)-imag(s.mid))*zoom*float64(span) + float64(span/2),
+	)
+	return
+}
+
+func (s *Set) Transform(newZoom float64, newMid complex128) {
+	destSet := *s // copy the set
+	destSet.grid = make([]float64, len(s.grid))
+	destSet.mid = newMid
+	destSet.zoom = newZoom
+	for i := range destSet.grid {
+		destX := i % s.w
+		dextY := i / s.w
+		c := destSet.PixToSet(destX, dextY)
+		srcX, srcY := s.SetToPix(c)
+		if srcX >= 0 && srcX < s.w && srcY >= 0 && srcY < s.h {
+			j := srcY*s.w + srcX
+			destSet.grid[i] = s.grid[j]
+		}
+	}
+	*s = destSet
+}
+
 // Draw paints current game state.
 func (s *Set) Draw(pix []byte) {
 	li := float64(16) // lightness 0-255
