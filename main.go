@@ -115,7 +115,7 @@ func (g *Game) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyO) &&
 		ebiten.IsKeyPressed(ebiten.KeyControl) {
 		filename, err := dialog.File().
-			SetStartDir(".").
+			SetStartDir("images").
 			Filter("Mandelbrot png file", "png").
 			Load()
 		if err != nil {
@@ -130,7 +130,7 @@ func (g *Game) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyS) &&
 		ebiten.IsKeyPressed(ebiten.KeyControl) {
 		fileName, err := dialog.File().
-			SetStartDir(".").
+			SetStartDir("images").
 			SetStartFile(g.set.ToFileName()).
 			Title("Save image").Save()
 		if err != nil {
