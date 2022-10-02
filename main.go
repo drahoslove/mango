@@ -85,6 +85,11 @@ func (g *Game) Update() error {
 		}
 	}
 
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		xx, yy := ebiten.CursorPosition()
+		mid = g.set.PixToSet(xx, yy)
+	}
+
 	if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
 		mid -= complex(0, 0.5/zoom)
 	}
@@ -148,12 +153,8 @@ func (g *Game) Update() error {
 		mid = g.set.mid
 	}
 
-	setChanged := g.set.zoom != zoom ||
-		g.set.mid != mid
-
-	if setChanged {
-		g.set.zoom = zoom
-		g.set.mid = mid
+	if g.set.zoom != zoom || g.set.mid != mid {
+		g.set.Transform(zoom, mid)
 
 		go g.Compute()
 	}
