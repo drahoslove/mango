@@ -68,10 +68,10 @@ func (g *Game) Update() error {
 		zoom = 1
 	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyPageUp) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyPageDown) {
 		zoom = nextSqrt(zoom, -1)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyPageDown) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyPageUp) {
 		zoom = nextSqrt(zoom, +1)
 	}
 	if _, yoff := ebiten.Wheel(); yoff != 0 {
