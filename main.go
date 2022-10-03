@@ -134,6 +134,14 @@ func (g *Game) Update() error {
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyS) &&
 		ebiten.IsKeyPressed(ebiten.KeyControl) {
+		if g.imageComputor.progress != PCS*PCS {
+			ok := dialog.
+				Message("Saving in progress\ninterrupt?").
+				YesNo()
+			if !ok {
+				return nil
+			}
+		}
 		fileName, err := dialog.File().
 			SetStartDir("images").
 			SetStartFile(g.set.ToFileName()).
@@ -248,15 +256,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		mid = g.set.PixToSet(x, y)
 	}
 	progress := fmt.Sprintf("%v/%v", g.progress, PCS*PCS)
+	imgProgress := fmt.Sprintf("%v/%v", g.imageComputor.progress, PCS*PCS)
 	debugText := fmt.Sprintf(
 		// "Arrows to navigate\n"+
 		// "PgUp/PgDn to zoom\n"+
-		"c: %v\nzoom: %v\niters: %v\nchunks: %v",
+		"c: %v\nzoom: %v\niters: %v\nchunks: %v\n",
 		mid,
 		toHumNum(g.set.zoom),
 		toHumNum(float64(g.set.steps)),
 		progress,
 	)
+	if g.imageComputor.progress < PCS*PCS {
+		debugText += fmt.Sprintf("saving: %v\n", imgProgress)
+	}
 	ebitenutil.DebugPrint(screen, debugText)
 }
 
@@ -276,6 +288,7 @@ func (g *Game) Layout(outW, outH int) (int, int) {
 func main() {
 	g := &Game{}
 	g.set = NewSet(screenWidth, screenHeight)
+	g.imageComputor.progress = PCS * PCS
 	if len(os.Args) > 1 { // lodad set position from filename
 		g.set.GoByFilename(os.Args[1])
 	}
