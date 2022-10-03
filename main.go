@@ -247,13 +247,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	if x >= 0 && x < g.set.w && y >= 0 && y < g.set.h { // not oustise of screen
 		mid = g.set.PixToSet(x, y)
 	}
-	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf(
-			// "Arrows to navigate\n"+
-			// "PgUp/PgDn to zoom\n"+
-			"c: %v\nzoom: %v\niters: %v",
-			mid, toHumNum(g.set.zoom), toHumNum(float64(g.set.steps))),
+	progress := fmt.Sprintf("%v/%v", g.progress, PCS*PCS)
+	debugText := fmt.Sprintf(
+		// "Arrows to navigate\n"+
+		// "PgUp/PgDn to zoom\n"+
+		"c: %v\nzoom: %v\niters: %v\nchunks: %v",
+		mid,
+		toHumNum(g.set.zoom),
+		toHumNum(float64(g.set.steps)),
+		progress,
 	)
+	ebitenutil.DebugPrint(screen, debugText)
 }
 
 func (g *Game) Layout(outW, outH int) (int, int) {

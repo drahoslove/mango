@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const PCS = 32 // number of pieces per line/column
+
 type Set struct {
 	w, h     int       // dimensions of the grid
 	grid     []float64 // int is the amount of iterations after which the value escapes the two-circle
@@ -152,6 +154,8 @@ type SetComputor struct {
 	cancelUpdate *context.CancelFunc
 	wg           sync.WaitGroup
 	mutex        sync.Mutex
+	premutex     sync.Mutex
+	progress     int
 }
 
 func (g *SetComputor) Init() {
@@ -211,6 +215,7 @@ func (g *SetComputor) Init() {
 		for w := range workload {
 			work(w)
 			g.wg.Done()
+			g.progress++
 		}
 	}
 	manager := func(computeWorks chan ComputeWork) {
@@ -228,6 +233,7 @@ func (g *SetComputor) Init() {
 				select {
 				case <-cw.ctx.Done():
 					for range cw.workload {
+						// g.progress++
 						g.wg.Done()
 					}
 					break currentWorkLoop
@@ -254,7 +260,11 @@ func (g *SetComputor) Compute() {
 		(*g.cancelUpdate)()
 	}
 
-	g.mutex.Lock()
+	if !g.premutex.TryLock() { // seomeone already waiting for mutex
+		return
+	}
+	g.mutex.Lock() // allow only one gorutine waiting for this lock by wrapping it to premutex
+	g.premutex.Unlock()
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelUpdate = &cancel
 	defer func() {
@@ -264,14 +274,13 @@ func (g *SetComputor) Compute() {
 
 	// poush current workload to workloads
 	workload := make(chan Work)
-
 	g.workloads <- ComputeWork{ // cw set to the manager
 		workload,
 		ctx,
 	}
 
-	pcs := 32 // number of rows and cols of chunks, must be even
-	// test := 0
+	g.progress = 0 // reset progress
+	pcs := PCS     // number of rows and cols of chunks, must be even
 	g.wg.Add(pcs * pcs)
 	go func() {
 		s := g.set
@@ -312,4 +321,5 @@ func (g *SetComputor) Compute() {
 	}()
 
 	g.wg.Wait()
+	g.progress = 1024
 }
