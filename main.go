@@ -162,7 +162,7 @@ func (g *Game) Update() error {
 	}
 
 	if g.set.zoom != zoom || g.set.mid != mid {
-		g.set.Transform(zoom, mid)
+		g.Transform(zoom, mid)
 
 		go g.Compute()
 	}
@@ -246,6 +246,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	if g.ticks%2 == 0 {
 		// render the set
 		g.set.Draw(g.pixels)
+		// g.DrawNeigh(g.pixels) // minimap
 	}
 	screen.WritePixels(g.pixels)
 

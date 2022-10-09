@@ -49,3 +49,23 @@ func nextSqrt(n float64, sign int) float64 {
 
 	return math.Pow(2, float64(lvl)/2)
 }
+
+func valueToColor(v float64, coloring int, maxSteps int) (byte, byte, byte) {
+	li := float64(16) // lightness 0-255
+	st := float64(1)  // steps/circle granulity
+	shade := byte(0)
+	switch coloring {
+	case 0:
+		shade = byte(li + math.Log(v*st)/math.Log(float64(maxSteps))*float64((256-li)))
+	case 1:
+		shade = byte(li + math.Mod(v*st, 256-li))
+	case 2:
+		shade = byte(li + (v*st)/float64(maxSteps)*(256-li))
+	case 3:
+		shade = byte(li + (v*st)/float64(maxSteps)*(256-li))
+		if shade > byte(li)+byte(256-int(li))/2 { // flip gradient direction
+			shade = byte(li) + byte(256-int(li)) - shade
+		}
+	}
+	return shade, shade, shade
+}

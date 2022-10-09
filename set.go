@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-const PCS = 32 // number of pieces per line/column
+const PCS = 32         // number of pieces per line/column
+const NEIGHT_RES = 128 // resolution of neighborhood thubmnail
 
 type Set struct {
 	w, h     int       // dimensions of the grid
@@ -90,7 +91,8 @@ func (s *Set) SetToPix(c complex128) (x, y int) {
 	return
 }
 
-func (s *Set) Transform(newZoom float64, newMid complex128) {
+func (sc *SetComputor) Transform(newZoom float64, newMid complex128) {
+	s := sc.set
 	destSet := *s // copy the set
 	destSet.grid = make([]float64, len(s.grid))
 	destSet.mid = newMid
@@ -100,37 +102,58 @@ func (s *Set) Transform(newZoom float64, newMid complex128) {
 		dextY := i / s.w
 		c := destSet.PixToSet(destX, dextY)
 		srcX, srcY := s.SetToPix(c)
+		thX, thY := sc.NeighToPix(c, s)
 		if srcX >= 0 && srcX < s.w && srcY >= 0 && srcY < s.h {
 			j := srcY*s.w + srcX
 			destSet.grid[i] = s.grid[j]
+		} else { // use neighborhood
+			j := thY*NEIGHT_RES + thX
+			destSet.grid[i] = sc.neighborhood[j]
+		}
+	}
+
+	// transform the current thumbnail
+	destNeighborhood := [NEIGHT_RES * NEIGHT_RES]float64{}
+	for i := range destNeighborhood { // copy the previous thumb first
+		destNeighborhood[i] = sc.neighborhood[i]
+	}
+	for i := range destNeighborhood {
+		destX := i % NEIGHT_RES
+		destY := i / NEIGHT_RES
+		c := sc.PixToNeigh(destX, destY, &destSet)
+		srcX, srcY := sc.NeighToPix(c, s)
+		if srcX >= 0 && srcX < NEIGHT_RES && srcY >= 0 && srcY < NEIGHT_RES {
+			j := srcY*NEIGHT_RES + srcX
+			destNeighborhood[i] = sc.neighborhood[j]
 		}
 	}
 	*s = destSet
+
+	sc.neighborhood = destNeighborhood
+
+	// generate new neighborhood thumbnail to be used to prefill space when Transforming next time
+	go func() {
+		for x := 0; x < NEIGHT_RES; x++ {
+			for y := 0; y < NEIGHT_RES; y++ {
+				ok, st := isInSet(sc.PixToNeigh(x, y, s), sc.set.steps)
+				if ok {
+					sc.neighborhood[(y*NEIGHT_RES+x)%len(sc.neighborhood)] = 0
+				} else {
+					sc.neighborhood[(y*NEIGHT_RES+x)%len(sc.neighborhood)] = st
+				}
+			}
+		}
+	}()
 }
 
 // Draw paints current game state.
 func (s *Set) Draw(pix []byte) {
-	li := float64(16) // lightness 0-255
-	st := float64(1)  // steps/circle granulity
 	for i, v := range s.grid {
 		if v > 0 {
-			shade := byte(0)
-			switch s.coloring {
-			case 0:
-				shade = byte(li + math.Log(v*st)/math.Log(float64(s.steps))*float64((256-li)))
-			case 1:
-				shade = byte(li + math.Mod(v*st, 256-li))
-			case 2:
-				shade = byte(li + (v*st)/float64(s.steps)*(256-li))
-			case 3:
-				shade = byte(li + (v*st)/float64(s.steps)*(256-li))
-				if shade > byte(li)+byte(256-int(li))/2 { // flip gradient direction
-					shade = byte(li) + byte(256-int(li)) - shade
-				}
-			}
-			pix[4*i] = shade
-			pix[4*i+1] = shade
-			pix[4*i+2] = shade
+			r, g, b := valueToColor(v, s.coloring, s.steps)
+			pix[4*i] = r
+			pix[4*i+1] = g
+			pix[4*i+2] = b
 			pix[4*i+3] = 0xff
 		} else {
 			pix[4*i] = 0
@@ -150,6 +173,7 @@ type ComputeWork struct {
 
 type SetComputor struct {
 	set          *Set
+	neighborhood [NEIGHT_RES * NEIGHT_RES]float64
 	workloads    chan ComputeWork
 	cancelUpdate *context.CancelFunc
 	wg           sync.WaitGroup
@@ -158,15 +182,57 @@ type SetComputor struct {
 	progress     int
 }
 
+// converts pix from the grid to  ±2 + ±2i complex number
+func (c *SetComputor) PixToNeigh(x, y int, s *Set) complex128 {
+	zoom := s.zoom / 2.5 / (4 * math.Sqrt2)
+	span := NEIGHT_RES
+	return complex(
+		(float64(x-span/2)/float64(span))/zoom+real(s.mid),
+		(float64(y-span/2)/float64(span))/zoom+imag(s.mid),
+	)
+}
+
+func (sc *SetComputor) NeighToPix(c complex128, s *Set) (x, y int) {
+	zoom := s.zoom / 2.5 / (4 * math.Sqrt2)
+	span := NEIGHT_RES
+	x = int(
+		(real(c)-real(s.mid))*zoom*float64(span) + float64(span/2),
+	)
+	y = int(
+		(imag(c)-imag(s.mid))*zoom*float64(span) + float64(span/2),
+	)
+	return
+}
+
+// Draw paints current game state.
+func (c *SetComputor) DrawNeigh(pix []byte) {
+	for i, v := range c.neighborhood {
+		x := i % NEIGHT_RES
+		y := i / NEIGHT_RES
+		destI := y*c.set.w + x + c.set.w - NEIGHT_RES
+		if v > 0 {
+			r, g, b := valueToColor(v, c.set.coloring, c.set.steps)
+			pix[4*destI] = r
+			pix[4*destI+1] = g
+			pix[4*destI+2] = b
+			pix[4*destI+3] = 0xff
+		} else {
+			pix[4*destI] = 0
+			pix[4*destI+1] = 0
+			pix[4*destI+2] = 0
+			pix[4*destI+3] = 0xff
+		}
+	}
+}
+
 func (g *SetComputor) Init() {
 	s := g.set
 	work := func(w Work) {
-		steps := s.steps // * int(1+math.Log2(s.zoom)/4)
 		setBlackPix := func(x, y int) {
 			s.grid[(y*s.w+x)%len(s.grid)] = 0 // set all black
 		}
 		computePix := func(x, y int) bool {
-			ok, st := isInSet(s.PixToSet(x, y), steps)
+			ok, st := isInSet(s.PixToSet(x, y), s.steps)
 			if ok {
 				setBlackPix(x, y)
 			} else {
@@ -203,7 +269,7 @@ func (g *SetComputor) Init() {
 		}
 		for y, y_ := y0, y1-1; y < y1; y, y_ = y+1, y_-1 { // each line
 			y := y
-			if y0 < s.h/2 { // upper half, chnage direction of line handling
+			if y0 < s.h/2 { // upper half, change direction of line handling
 				y = y_
 			}
 			for x := x0; x < x1; x++ {
