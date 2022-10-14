@@ -107,8 +107,10 @@ func (sc *SetComputor) Transform(newZoom float64, newMid complex128) {
 			j := srcY*s.w + srcX
 			destSet.grid[i] = s.grid[j]
 		} else { // use neighborhood
-			j := thY*NEIGHT_RES + thX
-			destSet.grid[i] = sc.neighborhood[j]
+			if thX >= 0 && thX < NEIGHT_RES && thY >= 0 && thY < NEIGHT_RES {
+				j := thY*NEIGHT_RES + thX
+				destSet.grid[i] = sc.neighborhood[j]
+			}
 		}
 	}
 
