@@ -34,7 +34,7 @@ A visualiser of **Man**delbrot set written in **Go**
 
 `WORKERS=16 ./mango`- to change number of rendering gorutines (threads)
 
-## Kye binding
+## Key binding
 
 ### navigation
 
